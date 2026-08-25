@@ -1,0 +1,31 @@
+node_modules/
+dist/
+dist-ssr/
+
+# Test output
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+coverage/
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local scratch
+*.tmp.mjs
+*.local
+.env
+.env.*
+!.env.example
