@@ -1,9 +1,9 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-// Self-hosted so the app makes no third-party requests. Shantell Sans is
-// loaded from its informality-axis build — the wordmark leans on that axis.
-import '@fontsource-variable/shantell-sans/infm.css';
+// Self-hosted so the app makes no third-party requests. League Spartan is
+// loaded Bold-only — that's the only weight the wordmark uses.
+import '@fontsource/league-spartan/700.css';
 import '@fontsource-variable/archivo';
 import '@fontsource/dm-mono/400.css';
 import '@fontsource/dm-mono/500.css';

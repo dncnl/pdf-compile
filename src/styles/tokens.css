@@ -8,13 +8,23 @@
   --ink-soft: #4a423c;
   --paper: #fbf6ea;
   --paper-deep: #f2e9d4;
-  --grid: #c9e4e7;
+  /* Warm neutral hairline, not a cool tint — blueberry stays the only cool
+     colour in the UI, so it unambiguously reads as "interactive". */
+  --grid: color-mix(in srgb, var(--ink) 10%, var(--paper));
 
   --tomato: #ff5a36; /* primary action */
   --blueberry: #2f4ae0; /* focus, links, selection */
   --butter: #ffc93c; /* highlight, warning */
   --mint: #6fcf97; /* success */
   --alarm: #c81e1e; /* error */
+
+  /* Derived near-whites, kept as tokens instead of hand-picked literals so
+     they can't drift out of sync with the colours they're derived from. */
+  --paper-bright: #ffffff; /* physical "white sheet" backgrounds */
+  --on-accent: #fff; /* text/icons on top of saturated backgrounds */
+  --paper-warm: color-mix(in srgb, var(--paper) 55%, white); /* hover/drop-active tint */
+  --alarm-tint: color-mix(in srgb, var(--alarm) 12%, var(--paper)); /* error card background */
+  --tomato-hover: color-mix(in srgb, var(--tomato) 85%, white); /* primary button hover */
 
   /* Per-kind card accents. Each source type gets one flat colour. */
   --kind-image: var(--butter);
@@ -26,17 +36,20 @@
   --stroke-w: 3px;
   --stroke: var(--stroke-w) solid var(--ink);
   --stroke-thin: 2px solid var(--ink);
+  --stroke-dashed: 3px dashed var(--ink);
   --shadow-hard: 5px 5px 0 var(--ink);
   --shadow-hard-sm: 3px 3px 0 var(--ink);
+  --shadow-hard-lg: 8px 8px 0 var(--ink);
   --shadow-pressed: 2px 2px 0 var(--ink);
 
   /* Uneven radii read as hand-cut paper rather than a rounded rectangle. */
   --radius-cut: 12px 8px 14px 6px;
   --radius-cut-alt: 7px 13px 6px 12px;
+  --radius-tight: 8px 6px 9px 5px;
   --radius-chip: 999px;
 
   /* ---- Type ---- */
-  --font-display: 'Shantell Sans Variable', 'Comic Sans MS', cursive;
+  --font-display: 'League Spartan', 'Archivo Variable', 'Segoe UI', system-ui, sans-serif;
   --font-ui: 'Archivo Variable', 'Segoe UI', system-ui, sans-serif;
   --font-mono: 'DM Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
 
@@ -59,6 +72,11 @@
   --s-5: 1.5rem;
   --s-6: 2rem;
   --s-7: 3rem;
+
+  /* ---- Size (fixed UI chrome, on the same 4px grid as space) ---- */
+  --size-badge: 32px;
+  --size-badge-sm: 28px;
+  --size-spinner: 24px;
 
   /* ---- Motion ---- */
   --press: 60ms ease-out;

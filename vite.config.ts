@@ -40,9 +40,11 @@ function cspPlugin(): Plugin {
 // The repo is published at github.com/dncnl/pdf-compile, so GitHub Pages serves
 // it from /pdf-compile/. Preview counts too: it reports command 'serve' but
 // serves the already-built HTML, whose asset URLs carry the build-time base.
-// Only the dev server stays at / so localhost URLs are plain.
+// Vercel serves from the domain root regardless, and sets VERCEL=1 during its
+// build, so that overrides the subpath. Only the dev server stays at / so
+// localhost URLs are plain.
 export default defineConfig(({ command, isPreview }) => ({
-  base: command === 'build' || isPreview ? '/pdf-compile/' : '/',
+  base: process.env.VERCEL ? '/' : command === 'build' || isPreview ? '/pdf-compile/' : '/',
   plugins: [react(), cspPlugin()],
   build: {
     target: 'es2022',
