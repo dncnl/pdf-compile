@@ -67,7 +67,9 @@ export function BuildOverlay({
 
         {phase === 'building' && (
           <>
-            <h2 className="overlay__title">Creating PDF…</h2>
+            <h2 className="overlay__title">
+              Binding your <em className="script">pages</em>
+            </h2>
             <p className="overlay__label" role="status" aria-live="polite">
               {progress.label}
             </p>
@@ -85,7 +87,9 @@ export function BuildOverlay({
 
         {phase === 'done' && result && (
           <>
-            <h2 className="overlay__title">PDF ready</h2>
+            <h2 className="overlay__title">
+              Your PDF is <em className="script">ready</em>
+            </h2>
             <p className="overlay__label">
               {result.pageCount} {result.pageCount === 1 ? 'page' : 'pages'} ·{' '}
               {formatBytes(result.bytes.byteLength)}

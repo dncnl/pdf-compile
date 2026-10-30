@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { safeFilename, withPdfExtension } from '../src/lib/download.ts';
+import { outputFilename, safeFilename, withPdfExtension } from '../src/lib/download.ts';
 import { formatBytes } from '../src/lib/limits.ts';
 import { combineOrient, orientFromExif, readJpegOrientation, swapsAxes } from '../src/lib/exif.ts';
 
@@ -26,6 +26,27 @@ describe('safeFilename', () => {
 
   it('caps runaway names', () => {
     expect(safeFilename('x'.repeat(500)).length).toBe(80);
+  });
+});
+
+describe('outputFilename', () => {
+  it('uses the typed name when there is one', () => {
+    expect(outputFilename('march invoices', 'scan.png')).toBe('march invoices');
+  });
+
+  it('falls back to the first file, minus its extension, when blank', () => {
+    expect(outputFilename('', 'Quarterly Report.docx')).toBe('Quarterly Report');
+    expect(outputFilename('   ', 'archive.tar.gz')).toBe('archive.tar');
+  });
+
+  it('keeps names that have no extension, or are only a dotfile', () => {
+    expect(outputFilename('', 'README')).toBe('README');
+    expect(outputFilename('', '.notes')).toBe('.notes');
+  });
+
+  it('is blank with no files, leaving the app-name fallback to safeFilename', () => {
+    expect(outputFilename('', undefined)).toBe('');
+    expect(withPdfExtension(outputFilename('', undefined))).toBe('stackly.pdf');
   });
 });
 

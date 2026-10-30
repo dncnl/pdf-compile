@@ -2,7 +2,7 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { formatBytes } from '../lib/limits.ts';
 import type { Source } from '../lib/types.ts';
-import { IconClose, IconGrip, IconKind, IconRotate, IconWarning, TornEdge } from './icons.tsx';
+import { IconClose, IconGrip, IconKind, IconRotate, IconWarning } from './icons.tsx';
 
 const KIND_LABEL: Record<Source['kind'], string> = {
   image: 'Image',
@@ -26,16 +26,9 @@ export function ScrapCard({ source, index, onRemove, onRotate }: Props) {
   const failed = source.status === 'error';
   const probing = source.status === 'probing';
 
-  // dnd-kit drives `transform` inline, and the resting tilt is also a
-  // transform, so the two are composed by hand rather than fighting over the
-  // property. A card being dragged squares up; the rest keep their tilt.
-  const dragTransform = CSS.Transform.toString(transform);
-  const tilt = isDragging ? '' : `rotate(${source.tilt}deg)`;
-
   const style: React.CSSProperties = {
-    transform: [dragTransform, tilt].filter(Boolean).join(' ') || undefined,
+    transform: CSS.Transform.toString(transform),
     transition,
-    ['--kind' as string]: `var(--kind-${source.kind})`,
     zIndex: isDragging ? 20 : undefined,
   };
 
@@ -52,12 +45,11 @@ export function ScrapCard({ source, index, onRemove, onRotate }: Props) {
         .filter(Boolean)
         .join(' ')}
     >
-      {/* Outside the clipped body so the stamp can overhang the card edge. */}
-      <span className="scrap__order" aria-hidden="true">
-        {index + 1}
-      </span>
-
       <div className="scrap__body">
+        <span className="scrap__order" aria-hidden="true">
+          {String(index + 1).padStart(2, '0')}
+        </span>
+
         <button
           type="button"
           className="scrap__grip"
@@ -125,8 +117,6 @@ export function ScrapCard({ source, index, onRemove, onRotate }: Props) {
             <IconClose />
           </button>
         </div>
-
-        <TornEdge />
       </div>
     </li>
   );

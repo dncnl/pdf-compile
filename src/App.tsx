@@ -1,12 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Board } from './components/Board.tsx';
 import { BuildOverlay, type BuildPhase } from './components/BuildOverlay.tsx';
+import { Footer } from './components/Footer.tsx';
 import { Header } from './components/Header.tsx';
 import { Notices } from './components/Notices.tsx';
 import { OutputPanel } from './components/OutputPanel.tsx';
 import { useSources } from './hooks/useSources.ts';
 import { compile, type CompileResult } from './lib/compile.ts';
-import { downloadPdf } from './lib/download.ts';
+import { downloadPdf, outputFilename } from './lib/download.ts';
 import {
   DEFAULT_SETTINGS,
   messageFor,
@@ -24,8 +25,10 @@ const ALLOWED: Record<string, ReadonlyArray<string>> = {
 };
 
 /**
- * Settings are the only thing that persists. File contents never touch
+ * Page settings are the only thing that persists. File contents never touch
  * storage — they live in memory for as long as the tab is open and no longer.
+ * The file name doesn't persist either: it belongs to this batch of files, and
+ * a stale one would override naming the PDF after the first file.
  */
 function loadSettings(): OutputSettings {
   try {
@@ -39,9 +42,6 @@ function loadSettings(): OutputSettings {
       if (typeof value === 'string' && values.includes(value)) {
         (next as Record<string, string>)[key] = value;
       }
-    }
-    if (typeof parsed.filename === 'string' && parsed.filename.trim().length > 0) {
-      next.filename = parsed.filename.slice(0, 80);
     }
     return next;
   } catch {
@@ -73,7 +73,8 @@ export function App() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      const { filename: _filename, ...persisted } = settings;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
     } catch {
       // Private browsing or blocked storage. Settings just won't persist.
     }
@@ -138,6 +139,10 @@ export function App() {
     return () => window.removeEventListener('beforeunload', onBeforeUnload);
   }, [phase]);
 
+  // Error cards never reach the output, so they don't get to name it either.
+  const firstFileName = sources.find((source) => source.status !== 'error')?.file.name;
+  const filename = outputFilename(settings.filename, firstFileName);
+
   const handleBuild = useCallback(async () => {
     setPhase('building');
     setResult(null);
@@ -145,18 +150,18 @@ export function App() {
     setProgress({ done: 0, total: readyCount, label: 'Getting started' });
 
     try {
-      const built = await compile(sources, settings, setProgress);
+      const built = await compile(sources, { ...settings, filename }, setProgress);
       setResult(built);
       setPhase('done');
     } catch (err) {
       setError(messageFor(err));
       setPhase('error');
     }
-  }, [readyCount, settings, sources]);
+  }, [filename, readyCount, settings, sources]);
 
   const handleDownload = useCallback(() => {
-    if (result) downloadPdf(result.bytes, settings.filename);
-  }, [result, settings.filename]);
+    if (result) downloadPdf(result.bytes, filename);
+  }, [result, filename]);
 
   return (
     <div className="app">
@@ -177,6 +182,7 @@ export function App() {
 
         <OutputPanel
           settings={settings}
+          filenamePlaceholder={outputFilename('', firstFileName) || 'stackly'}
           onChange={updateSettings}
           totalPages={totalPages}
           readyCount={readyCount}
@@ -187,24 +193,14 @@ export function App() {
         />
       </main>
 
-      <footer className="footer">
-        <p>Stackly runs entirely in your browser. No account, no upload, no server.</p>
-        <a
-          className="footer__link"
-          href="https://github.com/dncnl/pdf-compile"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Source
-        </a>
-      </footer>
+      <Footer />
 
       <BuildOverlay
         phase={phase}
         progress={progress}
         result={result}
         error={error}
-        filename={settings.filename}
+        filename={filename}
         onDownload={handleDownload}
         onClose={() => setPhase('idle')}
       />

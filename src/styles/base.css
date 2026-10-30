@@ -18,10 +18,14 @@ body {
   min-height: 100dvh;
   font-family: var(--font-ui);
   font-size: var(--fs-base);
+  font-weight: 400;
   line-height: var(--lh-base);
   color: var(--ink);
   background-color: var(--paper);
   -webkit-font-smoothing: antialiased;
+  /* Cormorant defaults to old-style figures; counts and page numbers read
+     better as lining ones. */
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 img,
@@ -46,21 +50,34 @@ button {
 h1,
 h2,
 h3 {
+  font-family: var(--font-serif);
+  font-weight: 500;
   line-height: var(--lh-tight);
-  font-weight: 800;
-  font-stretch: 110%;
   letter-spacing: -0.01em;
+}
+
+/* Short decorative accents only — never whole sentences or controls. */
+.script {
+  font-family: var(--font-script);
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--accent);
+  /* Pinyon's capitals sit low and its swashes run wide; nudge it onto the
+     serif's baseline and give the swash room. */
+  font-size: 1.12em;
+  padding-inline: 0.06em 0.12em;
 }
 
 /* One focus treatment everywhere, and it is always visible. */
 :focus-visible {
-  outline: 3px dashed var(--blueberry);
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
 ::selection {
-  background: var(--butter);
-  color: var(--ink);
+  background: var(--accent);
+  color: var(--on-ink);
 }
 
 .visually-hidden {

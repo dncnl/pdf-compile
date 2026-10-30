@@ -1,68 +1,51 @@
 /* Stackly design tokens.
-   Naive aesthetic: flat saturated colour, thick ink outlines, hard offset
-   shadows. No gradients, no blur, no translucency anywhere in the app. */
+   Quiet minimalism: three colours (ink, paper, one accent), hairline rules,
+   generous space. Every other shade is a mix of those three, never a new hue. */
 
 :root {
-  /* ---- Colour ---- */
-  --ink: #14110f;
-  --ink-soft: #4a423c;
-  --paper: #fbf6ea;
-  --paper-deep: #f2e9d4;
-  /* Warm neutral hairline, not a cool tint — blueberry stays the only cool
-     colour in the UI, so it unambiguously reads as "interactive". */
-  --grid: color-mix(in srgb, var(--ink) 10%, var(--paper));
+  /* ---- Colour: the whole palette ---- */
+  --ink: #1f1d1a;
+  --paper: #f7f4ee;
+  --accent: #8a3b2b; /* oxblood: primary action hover, focus, selection, errors */
 
-  --tomato: #ff5a36; /* primary action */
-  --blueberry: #2f4ae0; /* focus, links, selection */
-  --butter: #ffc93c; /* highlight, warning */
-  --mint: #6fcf97; /* success */
-  --alarm: #c81e1e; /* error */
+  /* Derived shades. Mixed from the three above so they can't drift. */
+  --ink-soft: color-mix(in srgb, var(--ink) 72%, var(--paper)); /* secondary text, ≥4.5:1 */
+  --ink-faint: color-mix(in srgb, var(--ink) 45%, var(--paper)); /* placeholders, icons */
+  --line: color-mix(in srgb, var(--ink) 14%, var(--paper)); /* hairlines */
+  --line-strong: color-mix(in srgb, var(--ink) 30%, var(--paper));
+  --sheet: color-mix(in srgb, var(--paper) 35%, white); /* cards, inputs: a "white sheet" */
+  --paper-deep: color-mix(in srgb, var(--ink) 4%, var(--paper)); /* wells, hover */
+  --accent-tint: color-mix(in srgb, var(--accent) 7%, var(--paper));
+  --on-ink: var(--paper);
 
-  /* Derived near-whites, kept as tokens instead of hand-picked literals so
-     they can't drift out of sync with the colours they're derived from. */
-  --paper-bright: #ffffff; /* physical "white sheet" backgrounds */
-  --on-accent: #fff; /* text/icons on top of saturated backgrounds */
-  --paper-warm: color-mix(in srgb, var(--paper) 55%, white); /* hover/drop-active tint */
-  --alarm-tint: color-mix(in srgb, var(--alarm) 12%, var(--paper)); /* error card background */
-  --tomato-hover: color-mix(in srgb, var(--tomato) 85%, white); /* primary button hover */
+  /* ---- Line & depth ---- */
+  --hairline: 1px solid var(--line);
+  --hairline-strong: 1px solid var(--line-strong);
+  --shadow-sheet: 0 1px 2px color-mix(in srgb, var(--ink) 6%, transparent),
+    0 8px 24px -12px color-mix(in srgb, var(--ink) 18%, transparent);
+  --shadow-lift: 0 2px 4px color-mix(in srgb, var(--ink) 8%, transparent),
+    0 24px 48px -16px color-mix(in srgb, var(--ink) 28%, transparent);
 
-  /* Per-kind card accents. Each source type gets one flat colour. */
-  --kind-image: var(--butter);
-  --kind-pdf: var(--tomato);
-  --kind-docx: var(--blueberry);
-  --kind-text: var(--mint);
-
-  /* ---- Line & shadow ---- */
-  --stroke-w: 3px;
-  --stroke: var(--stroke-w) solid var(--ink);
-  --stroke-thin: 2px solid var(--ink);
-  --stroke-dashed: 3px dashed var(--ink);
-  --shadow-hard: 5px 5px 0 var(--ink);
-  --shadow-hard-sm: 3px 3px 0 var(--ink);
-  --shadow-hard-lg: 8px 8px 0 var(--ink);
-  --shadow-pressed: 2px 2px 0 var(--ink);
-
-  /* Uneven radii read as hand-cut paper rather than a rounded rectangle. */
-  --radius-cut: 12px 8px 14px 6px;
-  --radius-cut-alt: 7px 13px 6px 12px;
-  --radius-tight: 8px 6px 9px 5px;
-  --radius-chip: 999px;
+  --radius: 2px;
+  --radius-sheet: 4px;
+  --radius-pill: 999px;
 
   /* ---- Type ---- */
-  --font-display: 'League Spartan', 'Archivo Variable', 'Segoe UI', system-ui, sans-serif;
-  --font-ui: 'Archivo Variable', 'Segoe UI', system-ui, sans-serif;
-  --font-mono: 'DM Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  --font-serif: 'Cormorant Garamond Variable', 'Cormorant Garamond', Garamond, Georgia, serif;
+  --font-ui: 'Jost Variable', 'Jost', 'Futura', 'Century Gothic', system-ui, sans-serif;
+  --font-script: 'Pinyon Script', 'Snell Roundhand', 'Segoe Script', cursive;
 
   --fs-xs: 0.75rem;
-  --fs-sm: 0.8125rem;
-  --fs-base: 0.9375rem;
-  --fs-md: 1.0625rem;
-  --fs-lg: 1.375rem;
-  --fs-xl: 1.875rem;
-  --fs-2xl: 2.75rem;
+  --fs-sm: 0.875rem;
+  --fs-base: 1rem;
+  --fs-md: 1.125rem;
+  --fs-lg: 1.75rem;
+  --fs-xl: 2.5rem;
+  --fs-2xl: 3.5rem;
 
-  --lh-tight: 1.1;
-  --lh-base: 1.5;
+  --lh-tight: 1.05;
+  --lh-base: 1.55;
+  --tracking-label: 0.16em;
 
   /* ---- Space (4px scale) ---- */
   --s-1: 0.25rem;
@@ -72,20 +55,21 @@
   --s-5: 1.5rem;
   --s-6: 2rem;
   --s-7: 3rem;
+  --s-8: 4.5rem;
 
-  /* ---- Size (fixed UI chrome, on the same 4px grid as space) ---- */
-  --size-badge: 32px;
-  --size-badge-sm: 28px;
-  --size-spinner: 24px;
+  /* ---- Size ---- */
+  --size-control: 40px;
+  --size-spinner: 22px;
 
   /* ---- Motion ---- */
-  --press: 60ms ease-out;
-  --settle: 380ms cubic-bezier(0.2, 0.9, 0.3, 1);
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --quick: 180ms var(--ease);
+  --settle: 420ms var(--ease);
 }
 
 @media (prefers-reduced-motion: reduce) {
   :root {
-    --press: 1ms;
+    --quick: 1ms;
     --settle: 1ms;
   }
 }

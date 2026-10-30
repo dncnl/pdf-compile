@@ -21,8 +21,6 @@ export interface Source {
   error?: string;
   /** Set when the source will be used, but not as well as it could be. */
   warning?: string;
-  /** Stable per-card tilt in degrees, derived from the id. */
-  tilt: number;
 }
 
 export type PageSizeId = 'a4' | 'letter' | 'legal' | 'original';
@@ -43,7 +41,8 @@ export const DEFAULT_SETTINGS: OutputSettings = {
   orientation: 'auto',
   fit: 'contain',
   margin: 'small',
-  filename: 'stackly',
+  /** Blank means "name it after the first file". */
+  filename: '',
 };
 
 export interface CompileProgress {
