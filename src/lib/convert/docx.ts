@@ -65,11 +65,152 @@ async function layoutDocx(file: File): Promise<HTMLElement[]> {
 
   sanitizeRenderedDocx(host);
 
-  const sections = Array.from(host.querySelectorAll<HTMLElement>('section.docx'));
+  const sections = Array.from(host.querySelectorAll<HTMLElement>('section.docx')).flatMap(
+    paginateSection,
+  );
   if (sections.length === 0) {
     throw new AppError('This Word document appears to be empty.');
   }
   return sections;
+}
+
+/**
+ * Split one rendered page that overflows its paper size into real pages.
+ *
+ * docx-preview only starts a new page where the file records one — an explicit
+ * break, or the page breaks Word saves after laying a document out. Documents
+ * from Google Docs, generators, or anything that never went through Word's
+ * layout carry neither, and come out as a single page as tall as the whole
+ * document. This re-flows that page at block boundaries (paragraphs, table
+ * rows), repeating the header and footer on every page, so nothing is cut
+ * through the middle of a line.
+ *
+ * A single block taller than a page — a huge image — is left on its own
+ * oversized page rather than sliced.
+ */
+function paginateSection(section: HTMLElement): HTMLElement[] {
+  const pageHeight = parseFloat(getComputedStyle(section).minHeight);
+  if (!(pageHeight > 0) || section.offsetHeight <= pageHeight + 1) return [section];
+
+  const children = Array.from(section.children) as HTMLElement[];
+  const articles = children.filter((child) => child.tagName === 'ARTICLE');
+  if (articles.length === 0) return [section];
+
+  // Everything that isn't body flow — margins, header, footer, notes — repeats
+  // (or at least reserves its space) on every page.
+  const flowHeight = articles.reduce((sum, article) => sum + article.offsetHeight, 0);
+  const available = pageHeight - (section.offsetHeight - flowHeight) - 1;
+  if (available < pageHeight * 0.25) return [section];
+
+  for (const article of articles) {
+    for (const child of Array.from(article.children)) {
+      if (child instanceof HTMLTableElement && child.offsetHeight > available) {
+        splitTable(child, available);
+      }
+    }
+  }
+
+  // Group blocks into pages by where they actually sit in the long layout.
+  // Measured before anything moves, so every rect is from the same layout.
+  type Block = { article: HTMLElement; element: Element };
+  const pages: Block[][] = [];
+  let current: Block[] = [];
+  let pageTop = 0;
+
+  for (const article of articles) {
+    for (const element of Array.from(article.children)) {
+      const rect = element.getBoundingClientRect();
+      if (current.length === 0) {
+        pageTop = rect.top;
+      } else if (rect.bottom - pageTop > available) {
+        pages.push(current);
+        current = [];
+        pageTop = rect.top;
+      }
+      current.push({ article, element });
+    }
+  }
+  if (current.length > 0) pages.push(current);
+  if (pages.length <= 1) return [section];
+
+  const header = children.find((child) => child.tagName === 'HEADER');
+  const footer = children.find((child) => child.tagName === 'FOOTER');
+  // Footnotes and endnotes belong after the text they annotate.
+  const notes = children.filter(
+    (child) => child !== header && child !== footer && !articles.includes(child),
+  );
+
+  const result = [section];
+  let anchor = section;
+
+  for (const blocks of pages.slice(1)) {
+    const page = section.cloneNode(false) as HTMLElement;
+    if (header) page.append(header.cloneNode(true));
+
+    // Each source article keeps its own shell so column settings carry over.
+    const shells = new Map<HTMLElement, HTMLElement>();
+    for (const { article, element } of blocks) {
+      let shell = shells.get(article);
+      if (!shell) {
+        shell = article.cloneNode(false) as HTMLElement;
+        shells.set(article, shell);
+        page.append(shell);
+      }
+      shell.append(element);
+    }
+
+    if (footer) page.append(footer.cloneNode(true));
+    anchor.after(page);
+    anchor = page;
+    result.push(page);
+  }
+
+  const last = result[result.length - 1]!;
+  const lastFooter = last.querySelector(':scope > footer');
+  for (const note of notes) {
+    if (lastFooter) lastFooter.before(note);
+    else last.append(note);
+  }
+
+  for (const article of articles) {
+    if (article.childElementCount === 0) article.remove();
+  }
+
+  return result;
+}
+
+/**
+ * Break a table taller than a page into consecutive tables of whole rows, so
+ * pagination has row boundaries to break at.
+ */
+function splitTable(table: HTMLTableElement, available: number): void {
+  const rows = Array.from(table.rows);
+  const groups: HTMLTableRowElement[][] = [];
+  let current: HTMLTableRowElement[] = [];
+  let groupTop = 0;
+
+  for (const row of rows) {
+    const rect = row.getBoundingClientRect();
+    if (current.length === 0) {
+      groupTop = rect.top;
+    } else if (rect.bottom - groupTop > available) {
+      groups.push(current);
+      current = [];
+      groupTop = rect.top;
+    }
+    current.push(row);
+  }
+  if (current.length > 0) groups.push(current);
+
+  const colgroup = table.querySelector(':scope > colgroup');
+  let anchor: Element = table;
+  for (const group of groups.slice(1)) {
+    const part = table.cloneNode(false) as HTMLTableElement;
+    if (colgroup) part.append(colgroup.cloneNode(true));
+    part.append(...group);
+    anchor.after(part);
+    anchor = part;
+  }
 }
 
 /**

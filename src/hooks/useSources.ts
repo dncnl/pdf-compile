@@ -10,15 +10,6 @@ function makeId(): string {
   return `src-${idCounter}-${Date.now().toString(36)}`;
 }
 
-/** A stable pseudo-random tilt per card, so re-renders never reshuffle them. */
-function tiltFor(id: string): number {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) {
-    hash = (hash * 31 + id.charCodeAt(i)) | 0;
-  }
-  return ((Math.abs(hash) % 201) / 100 - 1) * 1.8;
-}
-
 export interface UseSources {
   sources: Source[];
   notices: string[];
@@ -129,15 +120,13 @@ export function useSources(): UseSources {
           continue;
         }
 
-        const id = makeId();
         accepted.push({
-          id,
+          id: makeId(),
           file,
           kind: 'image',
           status: 'probing',
           pageCount: 0,
           rotation: 0,
-          tilt: tiltFor(id),
         });
         runningBytes += file.size;
         slots -= 1;

@@ -1,12 +1,13 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-// Self-hosted so the app makes no third-party requests. League Spartan is
-// loaded Bold-only — that's the only weight the wordmark uses.
-import '@fontsource/league-spartan/700.css';
-import '@fontsource-variable/archivo';
-import '@fontsource/dm-mono/400.css';
-import '@fontsource/dm-mono/500.css';
+// Self-hosted so the app makes no third-party requests. Three voices:
+// Cormorant Garamond (serif) for headings, Jost (geometric) for the interface,
+// and Pinyon Script for a handful of short decorative accents.
+import '@fontsource-variable/cormorant-garamond';
+import '@fontsource-variable/cormorant-garamond/wght-italic.css';
+import '@fontsource-variable/jost';
+import '@fontsource/pinyon-script/400.css';
 
 import './styles/tokens.css';
 import './styles/base.css';

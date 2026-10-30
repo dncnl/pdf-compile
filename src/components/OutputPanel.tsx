@@ -9,6 +9,8 @@ import type {
 
 interface Props {
   settings: OutputSettings;
+  /** Shown while the field is blank — the name the PDF will get by default. */
+  filenamePlaceholder: string;
   onChange: (next: Partial<OutputSettings>) => void;
   totalPages: number;
   readyCount: number;
@@ -45,6 +47,7 @@ const MARGINS: Array<{ id: MarginId; label: string }> = [
 
 export function OutputPanel({
   settings,
+  filenamePlaceholder,
   onChange,
   totalPages,
   readyCount,
@@ -61,7 +64,9 @@ export function OutputPanel({
 
   return (
     <aside className="panel" aria-label="Output settings">
-      <h2 className="panel__heading">Page setup</h2>
+      <h2 className="panel__heading">
+        Page <em className="script">setup</em>
+      </h2>
       <p className="panel__hint">
         Applies to images. PDFs and Word documents keep their own page size.
       </p>
@@ -110,6 +115,7 @@ export function OutputPanel({
             className="input"
             type="text"
             value={settings.filename}
+            placeholder={filenamePlaceholder}
             spellCheck={false}
             autoComplete="off"
             onChange={(event) => onChange({ filename: event.target.value })}
@@ -119,15 +125,6 @@ export function OutputPanel({
       </div>
 
       <div className="panel__build">
-        <button
-          type="button"
-          className="button button--primary button--big"
-          onClick={onBuild}
-          disabled={!canBuild}
-        >
-          {busy ? 'Creating PDF…' : 'Create PDF'}
-        </button>
-
         <p className="panel__summary" role="status">
           {readyCount === 0
             ? 'Add files to get started.'
@@ -137,6 +134,15 @@ export function OutputPanel({
                   totalPages === 1 ? 'page' : 'pages'
                 }`}
         </p>
+
+        <button
+          type="button"
+          className="button button--primary button--big"
+          onClick={onBuild}
+          disabled={!canBuild}
+        >
+          {busy ? 'Creating PDF…' : 'Create PDF'}
+        </button>
 
         {readyCount > 0 && (
           <button type="button" className="button button--quiet" onClick={onClear} disabled={busy}>

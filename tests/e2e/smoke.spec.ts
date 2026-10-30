@@ -124,8 +124,33 @@ async function makeDocxBytes(): Promise<number[]> {
   return Array.from(await Packer.toBuffer(doc));
 }
 
+/**
+ * A long .docx with no page breaks recorded anywhere — what Google Docs and
+ * generators produce. Word would lay this out over several pages.
+ */
+async function makeLongDocxBytes(paragraphs: number): Promise<number[]> {
+  const doc = new Document({
+    sections: [
+      {
+        children: Array.from(
+          { length: paragraphs },
+          (_, i) =>
+            new Paragraph(
+              `Paragraph ${i + 1}. The quick brown fox jumps over the lazy dog, and keeps going for long enough to wrap onto a second line.`,
+            ),
+        ),
+      },
+    ],
+  });
+  return Array.from(await Packer.toBuffer(doc));
+}
+
 /** Build, download, and re-open the result. */
 async function buildAndRead(page: Page): Promise<PDFDocument> {
+  return (await buildAndDownload(page)).pdf;
+}
+
+async function buildAndDownload(page: Page): Promise<{ pdf: PDFDocument; filename: string }> {
   await page.getByRole('button', { name: 'Create PDF' }).click();
 
   const downloadPromise = page.waitForEvent('download');
@@ -134,7 +159,7 @@ async function buildAndRead(page: Page): Promise<PDFDocument> {
 
   const path = await download.path();
   if (!path) throw new Error('download produced no file');
-  return PDFDocument.load(await readFile(path));
+  return { pdf: await PDFDocument.load(await readFile(path)), filename: download.suggestedFilename() };
 }
 
 test.beforeEach(async ({ page }) => {
@@ -299,4 +324,41 @@ test('makes no network requests while building', async ({ page }) => {
   await buildAndRead(page);
 
   expect(external).toEqual([]);
+});
+
+test('splits a long Word document with no recorded page breaks into real pages', async ({
+  page,
+}) => {
+  await addRawFiles(page, [
+    { name: 'long.docx', mime: DOCX_MIME, data: await makeLongDocxBytes(160) },
+  ]);
+  await expect(page.locator('.scrap')).toHaveCount(1);
+  await expect(page.locator('.scrap--probing')).toHaveCount(0);
+  await expect(page.locator('.scrap--error')).toHaveCount(0);
+
+  const pdf = await buildAndRead(page);
+  expect(pdf.getPageCount()).toBeGreaterThan(1);
+
+  // Every page is paper-sized, not one strip as tall as the document.
+  for (const pdfPage of pdf.getPages()) {
+    const { width, height } = pdfPage.getSize();
+    expect(height).toBeLessThan(width * 1.5);
+  }
+});
+
+test('names the PDF after the first file when no name is typed', async ({ page }) => {
+  await addRawFiles(page, [
+    { name: 'Field Notes.pdf', mime: 'application/pdf', data: await makePdfBytes(1) },
+    { name: 'second.pdf', mime: 'application/pdf', data: await makePdfBytes(1) },
+  ]);
+  await expect(page.locator('.scrap')).toHaveCount(2);
+  await expect(page.locator('.scrap--probing')).toHaveCount(0);
+  await expect(page.getByLabel('File name')).toHaveAttribute('placeholder', 'Field Notes');
+
+  expect((await buildAndDownload(page)).filename).toBe('Field Notes.pdf');
+
+  // A typed name still wins.
+  await page.getByRole('button', { name: 'Back to files' }).click();
+  await page.getByLabel('File name').fill('combined');
+  expect((await buildAndDownload(page)).filename).toBe('combined.pdf');
 });

@@ -33,12 +33,15 @@ export function DropZone({ onFiles, variant }: Props) {
 
       {variant === 'empty' ? (
         <>
-          <h2 className="dropzone__title">No files yet</h2>
+          <p className="dropzone__eyebrow">Begin here</p>
+          <h2 className="dropzone__title">
+            No files <em className="script">yet</em>
+          </h2>
           <p className="dropzone__body">
-            Drop files anywhere on this page, or choose them below. Images, PDFs, Word documents,
-            and plain text all work.
+            Drop files anywhere on this page, or choose them below. Images, PDFs, Word
+            documents, and plain text all work.
           </p>
-          <label htmlFor={inputId} className="button button--primary">
+          <label htmlFor={inputId} className="button button--primary button--wide">
             Choose files
           </label>
         </>
